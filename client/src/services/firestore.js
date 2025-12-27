@@ -2,13 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCVCx7rqHjHRtHGBvQzJjqRqbXZrXvXvXv",
+  apiKey: "AIzaSyDSknztmet6QVWMenB_LPh-0UxZWI-1OsI",
   authDomain: "se4458-tuition-chat.firebaseapp.com",
   databaseURL: "https://se4458-tuition-chat-default-rtdb.firebaseio.com",
   projectId: "se4458-tuition-chat",
-  storageBucket: "se4458-tuition-chat.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890"
+  storageBucket: "se4458-tuition-chat.firebasestorage.app",
+  messagingSenderId: "393114146436",
+  appId: "1:393114146436:web:353696e05cc65ba69914d1",
+  measurementId: "G-1K1663JFT6"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -44,5 +45,7 @@ export const subscribeToMessages = (sessionId, callback) => {
       messages.push({ id: doc.id, ...doc.data() });
     });
     callback(messages);
+  }, (error) => {
+    console.error('Firebase subscription error:', error);
   });
 };

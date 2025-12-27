@@ -7,15 +7,11 @@ function TuitionCard({ data }) {
         <h3>Harç Bilgisi / Tuition Info</h3>
         <div className="kv">
           <div className="k">Student No:</div>
-          <div className="v">{data.studentNo}</div>
-          <div className="k">Student Name:</div>
-          <div className="v">{data.studentName || 'N/A'}</div>
-          <div className="k">Faculty:</div>
-          <div className="v">{data.faculty || 'N/A'}</div>
-          <div className="k">Tuition Amount:</div>
-          <div className="v">{data.tuition ? `${data.tuition} TL` : 'N/A'}</div>
-          <div className="k">Last Payment Date:</div>
-          <div className="v">{data.lastPaymentDate || 'N/A'}</div>
+          <div className="v">{data.studentNo || 'N/A'}</div>
+          <div className="k">Term:</div>
+          <div className="v">{data.term || 'N/A'}</div>
+          <div className="k">Amount:</div>
+          <div className="v">{data.balance !== undefined ? `${data.balance} TL` : 'N/A'}</div>
         </div>
       </div>
     </div>

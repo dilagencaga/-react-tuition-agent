@@ -270,17 +270,26 @@ async function routeByIntent(parsed) {
       intent,
       success: true,
       api: r,
-      ui: { type: "tuition_card", title: "Tuition" },
+      message: "", // Empty for card - card will be rendered by metadata
+      ui: { type: "tuition", title: "Tuition" },
+      data: r.data, // Include tuition data for card rendering
     };
   }
 
   // 2) UNPAID_TUITION
   if (intent === "UNPAID_TUITION") {
+    console.log('🔍 UNPAID_TUITION: Fetching unpaid tuitions...');
     const token = await getAdminToken();
     const r = await callMidtermApi({
       method: "GET",
       path: `/api/v1/Admin/unpaid`,
       token,
+    });
+
+    console.log('📞 UNPAID_TUITION API Response:', {
+      ok: r.ok,
+      status: r.status,
+      data: r.data
     });
 
     if (!r.ok) {
@@ -294,12 +303,15 @@ async function routeByIntent(parsed) {
       };
     }
 
+    console.log('✅ UNPAID_TUITION: Returning unpaid list');
     return {
       stage: "api",
       intent,
       success: true,
       api: r,
-      ui: { type: "unpaid_list", title: "Unpaid Tuitions" },
+      message: "", // Empty for card - card will be rendered by metadata
+      ui: { type: "unpaid", title: "Unpaid Tuitions" },
+      data: r.data, // Include unpaid data for card rendering
     };
   }
 
@@ -338,7 +350,7 @@ async function routeByIntent(parsed) {
         intent,
         success: false,
         api: tr,
-        message: `Öğrenci bulunamadı (Student No: ${studentNo}). Ödeme yapılamaz.`,
+        message: `Öğrenci bulunamadı. / student not found (Student No: ${studentNo}). Ödeme yapılamaz/ can not.`,
         ui: { type: "error", title: "Not Found" },
       };
     }
@@ -392,11 +404,13 @@ async function routeByIntent(parsed) {
       stage: "confirm_pay",
       intent,
       success: true,
+      message: "", // Empty for card - card will be rendered by metadata
       ui: {
-        type: "pay_card",
+        type: "payment",
         title: "Pay Tuition",
         paymentRequest: { studentNo, term, amount },
       },
+      data: { studentNo, term, amount }, // Include payment data for card rendering
       api: tr,
     };
   }
@@ -560,8 +574,68 @@ app.get("/chat/history/:sessionId", async (req, res) => {
  */
 app.post("/chat", async (req, res) => {
   try {
+    const sessionId = req.body.sessionId || 'default_session';
     const userMessage = String(req.body.message || "").trim();
+    console.log('📩 Received message:', userMessage);
+
+    // Check if this is a payment confirmation
+    const paymentConfirmMatch = userMessage.match(/Evet.*ödeme.*yap.*Student No:\s*(\d+)/i) ||
+                                 userMessage.match(/Yes.*pay.*Student No:\s*(\d+)/i);
+    if (paymentConfirmMatch) {
+      const studentNo = paymentConfirmMatch[1];
+      console.log(`💳 Payment confirmation for student ${studentNo}, processing payment...`);
+
+      // First, get student tuition info to get term and amount
+      const tuitionInfo = await callMidtermApi({
+        method: "GET",
+        path: `/api/v1/tuition/${encodeURIComponent(studentNo)}`,
+      });
+
+      console.log(`📞 Fetched tuition info for payment:`, {
+        ok: tuitionInfo.ok,
+        status: tuitionInfo.status,
+        data: tuitionInfo.data
+      });
+
+      if (!tuitionInfo.ok) {
+        const errorMessage = `❌ Ödeme başarısız! / Payment failed! (Student No: ${studentNo})`;
+        await saveMessage(sessionId, errorMessage, 'bot', { type: 'error' });
+        return res.json({ sessionId, message: errorMessage });
+      }
+
+      const term = tuitionInfo.data?.term || tuitionInfo.data?.Term || '';
+      const amount = tuitionInfo.data?.balance ?? tuitionInfo.data?.Balance ?? 0;
+
+      console.log(`💰 Payment details:`, { studentNo, term, amount });
+
+      // Make actual payment API call using admin token
+      const token = await getAdminToken();
+      const paymentResponse = await callMidtermApi({
+        method: "POST",
+        path: `/api/v1/Payments`,
+        token,
+        body: { studentNo, term, amount },
+      });
+
+      console.log(`📞 Payment API Response for ${studentNo}:`, {
+        ok: paymentResponse.ok,
+        status: paymentResponse.status,
+        data: paymentResponse.data
+      });
+
+      if (paymentResponse.ok) {
+        const successMessage = `✅ Ödeme başarılı! / Payment successful! (Student No: ${studentNo})`;
+        await saveMessage(sessionId, successMessage, 'bot', { type: 'success' });
+        return res.json({ sessionId, message: successMessage });
+      } else {
+        const errorMessage = `❌ Ödeme başarısız! / Payment failed! (Student No: ${studentNo})`;
+        await saveMessage(sessionId, errorMessage, 'bot', { type: 'error' });
+        return res.json({ sessionId, message: errorMessage });
+      }
+    }
+
     let parsed = await parseIntent(userMessage);
+    console.log('🔍 Parsed intent:', parsed);
 
     // ✅ 1) Kullanıcı sadece sayı yazdıysa ve pendingIntent varsa:
     // ör: "harç sorgulama" -> sonra "1001"
@@ -620,6 +694,23 @@ if (parsed.intent === "PAY_TUITION" && !parsed.studentNo && lastStudentNo) {
 
     // ✅ 6) Clarify değilse pendingIntent sıfırla
     if (routed.stage !== "clarify") pendingIntent = null;
+
+    // ✅ 7) Save bot response to Firestore
+    // For cards (tuition_card, pay_card, unpaid_list), save with empty message but with metadata
+    if (routed.message !== undefined) {
+      const messageToSave = routed.message || ""; // Allow empty string for cards
+      console.log('💾 Saving to Firebase:', routed.ui?.type || 'text', messageToSave ? `"${messageToSave.substring(0, 50)}..."` : '[card data]');
+
+      await saveMessage(sessionId, messageToSave, 'bot', {
+        type: routed.ui?.type,
+        stage: routed.stage,
+        intent: routed.intent,
+        ...routed.data
+      });
+      console.log('✅ Saved to Firebase');
+    } else {
+      console.log('⚠️ No message field in response');
+    }
 
     return res.json({ userMessage, ...routed });
   } catch (err) {
@@ -696,6 +787,30 @@ app.delete("/chat/history/:sessionId", async (req, res) => {
   }
 });
 
+// Clear chat for a specific session
+app.delete("/clear-chat", async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ error: "sessionId required" });
+    }
+
+    const snapshot = await messagesCollection
+      .where("sessionId", "==", sessionId)
+      .get();
+
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    console.log(`🧹 Cleared ${snapshot.size} messages for session ${sessionId}`);
+    return res.json({ success: true, deleted: snapshot.size });
+  } catch (err) {
+    console.error("Clear chat error:", err);
+    return res.status(500).json({ error: "Failed to clear chat", details: err.message });
+  }
+});
+
 // 🔥 NUCLEAR OPTION: Delete ALL messages from Firestore (for cleaning corrupted data)
 app.delete("/chat/clear-all", async (req, res) => {
   try {
@@ -713,6 +828,6 @@ app.delete("/chat/clear-all", async (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log("✅ Server running on http://localhost:3001");
+app.listen(3000, () => {
+  console.log("✅ Server running on http://localhost:3000");
 });

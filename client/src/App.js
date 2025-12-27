@@ -12,7 +12,6 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000'
 function App() {
   const [messages, setMessages] = useState([]);
   const [sessionId, setSessionId] = useState('');
-  const [displayedMessageIds] = useState(new Set());
   const chatRef = useRef(null);
   const unsubscribeRef = useRef(null);
 
@@ -27,16 +26,7 @@ function App() {
 
     // Subscribe to Firestore messages
     const unsubscribe = subscribeToMessages(sid, (msgs) => {
-      const newMessages = [];
-      msgs.forEach((msg) => {
-        if (!displayedMessageIds.has(msg.id)) {
-          displayedMessageIds.add(msg.id);
-          newMessages.push(msg);
-        }
-      });
-      if (newMessages.length > 0) {
-        setMessages((prev) => [...prev, ...newMessages]);
-      }
+      setMessages(msgs);
     });
 
     unsubscribeRef.current = unsubscribe;
@@ -50,7 +40,8 @@ function App() {
         unsubscribeRef.current();
       }
     };
-  }, [displayedMessageIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -60,6 +51,7 @@ function App() {
   }, [messages]);
 
   const handleSendMessage = async (text) => {
+    console.log('📤 handleSendMessage called with:', text, 'sessionId:', sessionId);
     if (!text.trim() || !sessionId) return;
 
     try {
@@ -77,8 +69,7 @@ function App() {
         throw new Error('Backend error');
       }
 
-      const data = await response.json();
-      console.log('Backend response:', data);
+      await response.json();
 
       // Backend will save bot response to Firestore, listener will handle rendering
     } catch (error) {
@@ -98,7 +89,6 @@ function App() {
 
       // Clear local state
       setMessages([]);
-      displayedMessageIds.clear();
 
       // Generate new session
       const newSid = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -112,16 +102,7 @@ function App() {
 
       // Subscribe to new session
       const unsubscribe = subscribeToMessages(newSid, (msgs) => {
-        const newMessages = [];
-        msgs.forEach((msg) => {
-          if (!displayedMessageIds.has(msg.id)) {
-            displayedMessageIds.add(msg.id);
-            newMessages.push(msg);
-          }
-        });
-        if (newMessages.length > 0) {
-          setMessages((prev) => [...prev, ...newMessages]);
-        }
+        setMessages(msgs);
       });
 
       unsubscribeRef.current = unsubscribe;
