@@ -38,8 +38,9 @@ The application follows the architecture specified in the assignment:
 
 ### Components
 
-1. **Frontend (Vanilla JavaScript)**
-   - Simple chat interface with real-time updates
+1. **Frontend**
+   - **React Version** (client/): Modern React application with component-based architecture
+   - **Vanilla JS Version** (public/): Original chat interface with real-time updates
    - Firebase Firestore integration for message synchronization
    - Supports both regular HTTP and real-time Firestore modes
 
@@ -63,7 +64,24 @@ The application follows the architecture specified in the assignment:
 
 ```
 tuition-agent/
-├── public/
+├── client/                     # React Frontend
+│   ├── public/
+│   │   └── index.html          # React HTML template
+│   ├── src/
+│   │   ├── components/         # React components
+│   │   │   ├── ChatBubble.js
+│   │   │   ├── TuitionCard.js
+│   │   │   ├── PaymentCard.js
+│   │   │   ├── UnpaidList.js
+│   │   │   └── ChatInput.js
+│   │   ├── services/
+│   │   │   └── firestore.js    # Firebase service layer
+│   │   ├── App.js              # Main React component
+│   │   ├── App.css             # React styles
+│   │   └── index.js            # React entry point
+│   ├── .env                    # React environment config
+│   └── package.json            # React dependencies
+├── public/                     # Vanilla JS Frontend (legacy)
 │   ├── index.html              # Main HTML file
 │   ├── styles.css              # Styling
 │   ├── app.js                  # Original chat app (HTTP-based)
@@ -71,8 +89,8 @@ tuition-agent/
 │   └── firebase-config.js      # Firebase frontend config
 ├── UniversityTuitionApi/       # Midterm .NET APIs
 ├── server.js                   # Express backend with Firebase
-├── package.json                # Dependencies
-├── .env                        # Environment variables
+├── package.json                # Backend dependencies
+├── .env                        # Backend environment variables
 ├── firebase.json               # Firebase service account
 ├── README.md                   # This file
 └── FIREBASE_SETUP.md           # Firebase setup instructions
@@ -95,12 +113,19 @@ tuition-agent/
    cd tuition-agent
    ```
 
-2. **Install dependencies**
+2. **Install backend dependencies**
    ```bash
    npm install
    ```
 
-3. **Configure environment variables**
+3. **Install React frontend dependencies**
+   ```bash
+   cd client
+   npm install
+   cd ..
+   ```
+
+4. **Configure environment variables**
 
    Create a `.env` file in the root directory:
    ```env
@@ -111,29 +136,45 @@ tuition-agent/
    FIREBASE_DB_URL=https://your-project.firebaseio.com
    ```
 
-4. **Setup Firebase**
+4. **Configure React environment**
+
+   Create a `client/.env` file:
+   ```env
+   PORT=3001
+   REACT_APP_BACKEND_URL=http://localhost:3000
+   ```
+
+5. **Setup Firebase**
 
    - Place your Firebase service account JSON file as `firebase.json` in the root
    - Follow [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions
-   - Update Firebase config in `public/app-firestore.js`
+   - Update Firebase config in `client/src/services/firestore.js`
 
-5. **Start the midterm API**
+6. **Start the midterm API**
    ```bash
    cd UniversityTuitionApi/se4458-university-tuition-api
    dotnet run --project UniversityTuitionApi
    ```
 
-6. **Start the Node.js server**
+7. **Start the Node.js backend**
    ```bash
    npm start
    # or
    node server.js
    ```
+   Backend runs on: http://localhost:3000
 
-7. **Open the application**
+8. **Start the React frontend**
+   ```bash
+   cd client
+   npm start
    ```
-   http://localhost:3001
-   ```
+   Frontend runs on: http://localhost:3001
+
+**Alternative: Use Vanilla JS version**
+   - Navigate to `public/index.html`
+   - Serve with any HTTP server (e.g., `npx serve public`)
+   - Access at http://localhost:3000 (or your server port)
 
 ## 🔧 Configuration
 
@@ -291,8 +332,9 @@ The AI agent recognizes the following intents:
 - dotenv
 
 ### Frontend
-- Vanilla JavaScript
+- React 18+
 - Firebase SDK (Firestore)
+- Vanilla JavaScript (legacy version)
 - HTML5/CSS3
 
 ### APIs
@@ -302,22 +344,32 @@ The AI agent recognizes the following intents:
 
 ## 📝 Design Decisions
 
-### 1. Dual Mode Support
+### 1. React Migration
+- Migrated from Vanilla JavaScript to React for better component architecture
+- Preserved Vanilla JS version in `public/` folder for backward compatibility
+- React version provides:
+  - Better state management with hooks
+  - Component reusability
+  - Easier maintenance and testing
+  - Modern development experience
+
+### 2. Dual Mode Support
 - Kept both HTTP-based (`app.js`) and Firestore-based (`app-firestore.js`) versions
 - Allows testing backend logic without Firebase dependency
 - Easy to switch between modes
 
-### 2. Intent Parsing
+### 3. Intent Parsing
 - Primary: OpenAI GPT-4.1-mini for natural language understanding
 - Fallback: Keyword-based parsing when OpenAI is unavailable
 - Supports both Turkish and English
 
-### 3. State Management
+### 4. State Management
 - Server-side: In-memory state for pending intents and last student number
 - Client-side: Session ID in localStorage
 - Firestore: Persistent chat history and messages
+- React: useState and useEffect hooks for local state
 
-### 4. API Gateway Pattern
+### 5. API Gateway Pattern
 - Express server acts as gateway to midterm APIs
 - Handles authentication (admin token caching)
 - SSL certificate validation disabled for localhost (development only)
