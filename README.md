@@ -1,6 +1,8 @@
-# Tuition AI Agent - SE4458 Assignment 3
+# 🎓 AI Tuition Agent - React Chat Application
 
-An AI-powered chat application for university tuition management, featuring Query Tuition, Pay Tuition, and Unpaid Tuition APIs with real-time messaging using Firebase Firestore.
+> An intelligent chat application for managing student tuition queries and payments using AI-powered natural language processing.
+
+**SE 4458 - Assignment 3** | Built with React, Firebase & OpenAI
 
 ## 📋 Project Overview
 
@@ -394,9 +396,16 @@ The AI agent recognizes the following intents:
 3. **Development Mode**: Firestore security rules are permissive (test mode)
 4. **Local API**: Midterm API runs on localhost (could be deployed separately)
 
-## 🎥 Video Demo
+## 🎥 Video Demonstration
 
-[Link to video presentation] - *To be added*
+**[📹 Watch Project Demo Video](https://drive.google.com/your-video-link)**
+
+*Video showcase coming soon - Will include:*
+- Live chat demonstration
+- Query tuition feature walkthrough
+- Payment processing flow
+- Unpaid tuitions listing
+- Real-time Firebase sync demo
 
 ## 👥 Contributors
 
@@ -409,9 +418,9 @@ This project is created for educational purposes as part of SE4458 course.
 
 ## 🔗 Links
 
-- **Code Repository**: [GitHub Link]
-- **Deployment**: Not deployed (uses local LLM option allowed by assignment)
-- **Midterm API Documentation**: See UniversityTuitionApi/README.md
+- **GitHub Repository**: https://github.com/dilagencaga/-react-tuition-agent
+- **Deployment**: Not deployed (local development with OpenAI API)
+- **Assignment Reference**: https://github.com/southriver/SE4458-AIAgent
 
 ## 📞 Support
 
