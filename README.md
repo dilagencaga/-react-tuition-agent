@@ -3,6 +3,9 @@
 > An intelligent chat application for managing student tuition queries and payments using AI-powered natural language processing.
 
 **SE 4458 - Assignment 3** | Built with React, Firebase & OpenAI
+GİTHUB repo: https://github.com/dilagencaga/-react-tuition-agent.git
+YOUTUBE:https://youtu.be/btlmMYAWEog
+TO Open the project: start server.js and \tuition-agent\client with npm start in different terminals with starting the midterm api solution project.
 
 ## 📋 Project Overview
 
@@ -398,7 +401,7 @@ The AI agent recognizes the following intents:
 
 ## 🎥 Video Demonstration
 
-**[📹 Watch Project Demo Video](https://drive.google.com/your-video-link)**
+https://youtu.be/btlmMYAWEog
 
 *Video showcase coming soon - Will include:*
 - Live chat demonstration
@@ -410,7 +413,6 @@ The AI agent recognizes the following intents:
 ## 👥 Contributors
 
 - Dila Gençağa
-- [Other team members from assignment page 2]
 
 ## 📄 License
 
@@ -418,14 +420,9 @@ This project is created for educational purposes as part of SE4458 course.
 
 ## 🔗 Links
 
-- **GitHub Repository**: https://github.com/dilagencaga/-react-tuition-agent
+- **GitHub Repository**: [https://github.com/dilagencaga/-react-tuition-agent](https://github.com/dilagencaga/-react-tuition-agent.git)
 - **Deployment**: Not deployed (local development with OpenAI API)
-- **Assignment Reference**: https://github.com/southriver/SE4458-AIAgent
 
-## 📞 Support
 
-For questions or issues, please contact the development team or refer to the Firebase setup guide.
-
----
 
 **Note**: This project fulfills the requirements of SE4458 Assignment 3, implementing an AI Agent with real-time messaging using Firestore, API Gateway pattern, and integration with midterm Tuition APIs.
